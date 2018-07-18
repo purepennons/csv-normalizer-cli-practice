@@ -20,18 +20,6 @@ describe('normalizeZIP', () => {
   })
 })
 
-describe('normalizeAddress', () => {
-  it('should prefix `"` and postfix `"` to the address', () => {
-    expect(normalizeAddress(',a address, without quoted string,')).toBe('",a address, without quoted string,"')
-    expect(normalizeAddress('",a address, with quoted string,"')).toBe('",a address, with quoted string,"')
-    expect(normalizeAddress('",prefix with, quoted string,')).toBe('"",prefix with, quoted string,"')
-    expect(normalizeAddress(',postfix with, quoted string,"')).toBe('",postfix with, quoted string,""')
-    expect(normalizeAddress("',a address, with single quoted string,'")).toBe("\"',a address, with single quoted string,'\"")
-    expect(normalizeAddress(",a address, with single quoted string,'")).toBe("\",a address, with single quoted string,'\"")
-    expect(normalizeAddress("',a address, with single quoted string,")).toBe("\"',a address, with single quoted string,\"")
-  })
-})
-
 describe('HMSToSecond', () => {
   it('should convert HMS to float point seconds', () => {
     expect(HMSToSecond('11:22:33.44')).toBe(40920330.044)

@@ -1,12 +1,26 @@
 import path from 'path';
+import { writeFile } from 'fs-extra';
 import csvtojson from 'csvtojson';
-import moment from 'moment-timezone'
+import moment from 'moment-timezone';
+import { pickAll, merge } from 'ramda';
+import { Parser } from 'json2csv';
+
+const FIELDS = [
+  'Timestamp',
+  'Address',
+  'ZIP',
+  'FullName',
+  'FooDuration',
+  'BarDuration',
+  'TotalDuration',
+  'Notes'
+];
 
 export function isValidUTF8(str) {}
 
 export function HMSToSecond(str) {
-  const regx = /^\d+:\d+:\d+\.\d+$/g
-  if(!regx.test(str)) throw new Error('invalid duration')
+  const regx = /^\d+:\d+:\d+\.\d+$/g;
+  if (!regx.test(str)) throw new Error('invalid duration');
 
   const [HH, MM, SSMS] = str.split(':');
   const [SS, MS] = SSMS.split('.');
@@ -16,6 +30,7 @@ export function HMSToSecond(str) {
 
 export function normalizeUTF8(str) {
   // replace invalid UTF-8 character with the Unicode Replacement Character
+  return str;
 }
 
 export function normalizeAddress(address) {
@@ -24,8 +39,8 @@ export function normalizeAddress(address) {
    * field; your CSV parsing will need to take that into account. Commas
    * will only be present inside a quoted string.
    */
-  const regx = /^\".*\"$/g;
-  return regx.test(address) ? address : `"${address}"`;
+  // do nothing, json2csv will handle it
+  return address;
 }
 
 export function normalizeName(name) {
@@ -44,35 +59,60 @@ export function normalizeTimestamp(timestamp) {
   // ISO-8601 format
   // US/Pacific -> US/Eastern
   // invalid -> warning to stderr
-  const t = moment.tz(timestamp, 'MM/DD/YY hh:mm:ss a', 'US/Pacific')
-  if(!t.isValid()) throw new Error('invalid timestamp')
-  return t.tz('US/Eastern').format()
+  const t = moment.tz(timestamp, 'MM/DD/YY hh:mm:ss a', 'US/Pacific');
+  if (!t.isValid()) throw new Error('invalid timestamp');
+  return t.tz('US/Eastern').format();
 }
 
 export function nomralizeDuration(foo, bar) {
   // foo and bar convert to floating point seconds format
   // return { FooDuration, BarDuration, TotalDuration }
   try {
-    const fooDuration = HMSToSecond(foo)
-    const barDuration = HMSToSecond(bar)
+    const fooDuration = HMSToSecond(foo);
+    const barDuration = HMSToSecond(bar);
     return {
       FooDuration: fooDuration,
       BarDuration: barDuration,
       TotalDuration: fooDuration + barDuration
-    }
-  } catch(err) {
-    console.warn('nomralizeDuration error:', err)
-    throw new Error('nomralizeDuration failure')
+    };
+  } catch (err) {
+    throw new Error('nomralizeDuration failure');
   }
 }
 
-export function normalizeColumn(obj) {}
+export function normalizeColumn(obj) {
+  const o = pickAll(FIELDS, obj);
 
-export default async function normalize(input) {
   try {
-    const json = await csvtojson().fromFile(path.resolve(input));
-    console.log('json', json);
+    // TODO: replace invalid UTF-8 character with the Unicode Replacement Character
+    o['Timestamp'] = normalizeTimestamp(o['Timestamp']);
+    o['Address'] = normalizeAddress(o['Address']);
+    o['ZIP'] = normalizeZIP(o['ZIP']);
+    o['FullName'] = normalizeName(o['FullName']);
+
+    const duration = nomralizeDuration(o['FooDuration'], o['BarDuration']);
+    return merge(o, duration);
   } catch (err) {
-    console.error('not a valid input', err);
+    console.warn('parsing error', err);
+    return null;
+  }
+}
+
+export default async function normalize(input = '', output = '') {
+  try {
+    if (!input || !output) throw new Error('empty input/output');
+
+    const objList = await csvtojson().fromFile(path.resolve(input));
+    const results = objList
+      .map(obj => normalizeColumn(obj))
+      .filter(obj => !!obj);
+
+    const json2csvParser = new Parser({ fields: FIELDS });
+    const csv = json2csvParser.parse(results);
+
+    // write back
+    await writeFile(path.resolve(output), csv);
+  } catch (err) {
+    console.error('not a valid input/output', err);
   }
 }
