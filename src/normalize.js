@@ -111,6 +111,11 @@ export default async function normalize(input = '', output = '') {
     const csv = json2csvParser.parse(results);
 
     // write back
+    const outPath = path.resolve(output)
+    const p = path.parse(outPath)
+    // ensure folder exist
+    if(p.dir) await fs.ensureDir(p.dir)
+    
     await fs.writeFile(path.resolve(output), csv);
   } catch (err) {
     console.error('not a valid input/output', err);
