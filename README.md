@@ -1,4 +1,16 @@
 
+# csv-normalizer
+## Install
+```
+yarn && yarn run link
+```
+
+## Usage
+```
+$ csv-normalizer <input> <output>
+```
+
+
 ## The problem: CSV normalization
 
 Please write a tool that reads a CSV formatted file on `stdin` and
