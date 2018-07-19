@@ -1,5 +1,5 @@
 import path from 'path';
-import { readFile, writeFile } from 'fs-extra';
+import fs from 'fs-extra';
 import csvtojson from 'csvtojson';
 import moment from 'moment-timezone';
 import { pickAll, merge } from 'ramda';
@@ -99,7 +99,7 @@ export function normalizeColumn(obj) {
 export default async function normalize(input = '', output = './normalized.csv') {
   try {
     if (!input || !output) throw new Error('empty input/output');
-    let csvstr = await readFile(path.resolve(input))
+    let csvstr = await fs.readFile(path.resolve(input))
     csvstr = normalizeUTF8(csvstr.toString())
 
     const objList = await csvtojson().fromString(csvstr);
@@ -111,7 +111,7 @@ export default async function normalize(input = '', output = './normalized.csv')
     const csv = json2csvParser.parse(results);
 
     // write back
-    await writeFile(path.resolve(output), csv);
+    await fs.writeFile(path.resolve(output), csv);
   } catch (err) {
     console.error('not a valid input/output', err);
   }
