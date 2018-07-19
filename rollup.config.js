@@ -1,20 +1,19 @@
 import babel from 'rollup-plugin-babel';
 import commonjs from 'rollup-plugin-commonjs';
-import external from 'rollup-plugin-peer-deps-external';
 import resolve from 'rollup-plugin-node-resolve';
 import json from 'rollup-plugin-json'
 
 import pkg from './package.json';
 
 const plugins = [
-  external(),
   json({
     include: 'node_modules/**',
     preferConst: true,
   }),
   babel({
     exclude: 'node_modules/**',
-    plugins: ['external-helpers']
+    plugins: ['external-helpers'],
+    runtimeHelpers: true,
   }),
   resolve(),
   commonjs()
@@ -36,11 +35,12 @@ export default [
     plugins
   },
   {
-    input: 'cli/csv-normalizer.js',
+    input: 'src/cli.js',
     output: [
       {
         file: pkg.bin['csv-normalizer'],
-        format: 'cjs'
+        format: 'cjs',
+        banner: '#!/usr/bin/env node'
       }
     ],
     plugins

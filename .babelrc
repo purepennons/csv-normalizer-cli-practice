@@ -6,10 +6,10 @@
       ]
     },
     "development": {
-      "plugins": ["external-helpers"]
+      "plugins": ["external-helpers", "transform-runtime"]
     },
     "production": {
-      "plugins": ["external-helpers"]
+      "plugins": ["external-helpers", "transform-runtime"]
     }
   },
   "presets": [
