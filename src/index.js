@@ -1,5 +1,5 @@
 import path from 'path';
-import { writeFile } from 'fs-extra';
+import { readFile, writeFile } from 'fs-extra';
 import csvtojson from 'csvtojson';
 import moment from 'moment-timezone';
 import { pickAll, merge } from 'ramda';
@@ -16,8 +16,6 @@ const FIELDS = [
   'Notes'
 ];
 
-export function isValidUTF8(str) {}
-
 export function HMSToSecond(str) {
   const regx = /^\d+:\d+:\d+\.\d+$/g;
   if (!regx.test(str)) throw new Error('invalid duration');
@@ -30,7 +28,8 @@ export function HMSToSecond(str) {
 
 export function normalizeUTF8(str) {
   // replace invalid UTF-8 character with the Unicode Replacement Character
-  return str;
+  const regx = /(?!([\u{0000}-\u{007F}]|[\u{0080}-\u{07FF}]|[\u{0800}-\u{FFFF}]|[\u{10000}-\u{10FFFF}]))/ug
+  return str.replace(regx, '\ufffd');
 }
 
 export function normalizeAddress(address) {
@@ -84,7 +83,6 @@ export function normalizeColumn(obj) {
   const o = pickAll(FIELDS, obj);
 
   try {
-    // TODO: replace invalid UTF-8 character with the Unicode Replacement Character
     o['Timestamp'] = normalizeTimestamp(o['Timestamp']);
     o['Address'] = normalizeAddress(o['Address']);
     o['ZIP'] = normalizeZIP(o['ZIP']);
@@ -98,11 +96,13 @@ export function normalizeColumn(obj) {
   }
 }
 
-export default async function normalize(input = '', output = '') {
+export default async function normalize(input = '', output = './normalized.csv') {
   try {
     if (!input || !output) throw new Error('empty input/output');
+    let csvstr = await readFile(path.resolve(input))
+    csvstr = normalizeUTF8(csvstr.toString())
 
-    const objList = await csvtojson().fromFile(path.resolve(input));
+    const objList = await csvtojson().fromString(csvstr);
     const results = objList
       .map(obj => normalizeColumn(obj))
       .filter(obj => !!obj);
