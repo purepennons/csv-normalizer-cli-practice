@@ -1,23 +1,34 @@
 import babel from 'rollup-plugin-babel';
 import commonjs from 'rollup-plugin-commonjs';
 import resolve from 'rollup-plugin-node-resolve';
-import json from 'rollup-plugin-json'
+import json from 'rollup-plugin-json';
 
 import pkg from './package.json';
 
 const plugins = [
   json({
     include: 'node_modules/**',
-    preferConst: true,
+    preferConst: true
   }),
   babel({
     exclude: 'node_modules/**',
     plugins: ['external-helpers'],
-    runtimeHelpers: true,
+    runtimeHelpers: true
   }),
   resolve(),
   commonjs()
-]
+];
+
+const external = [
+  'fs',
+  'path',
+  'fs-extra',
+  'ramda',
+  'json2csv',
+  'commander',
+  'csvtojson',
+  'moment-timezone'
+];
 
 export default [
   {
@@ -32,7 +43,8 @@ export default [
         format: 'es'
       }
     ],
-    plugins
+    plugins,
+    external
   },
   {
     input: 'src/cli.js',
@@ -43,6 +55,7 @@ export default [
         banner: '#!/usr/bin/env node'
       }
     ],
-    plugins
+    plugins,
+    external
   }
 ];

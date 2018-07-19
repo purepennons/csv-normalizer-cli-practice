@@ -44,6 +44,6 @@ describe('normalizeTimestamp', () => {
 
 describe('normalize', () => {
   it('should run without error', async () => {
-    await normalize('./samples/sample.csv')
+    await normalize('./samples/sample.csv', './temp/out.csv')
   })
 })
