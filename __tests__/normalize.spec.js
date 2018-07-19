@@ -1,5 +1,5 @@
 import path from 'path'
-import normalize, { normalizeZIP, normalizeAddress, HMSToSecond, normalizeTimestamp } from '../src/'
+import normalize, { normalizeZIP, normalizeAddress, HMSToSecond, normalizeTimestamp } from '../src/normalize'
 
 describe('normalizeZIP', () => {
   it('should get five zeros when the argument is not a string', () => {
